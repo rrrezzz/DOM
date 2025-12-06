@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Speech-to-Text Pad</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+    #startBtn, #stopBtn, #saveBtn {
+        margin-right: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+    
+    #transcript {
+        width: 100%;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+    #notesList {
+        margin-top: 20px;
+    }
+    </style>
+</head>
+<body>
+    <h1>Speech-to-Text Pad</h1>
+    <button id="startBtn">Start Listening</button>
+    <button id="stopBtn" disabled>Stop Listening</button>
+    <button id="saveBtn">Save Note</button>
+    <textarea id="transcript" rows="10" cols="50" placeholder="Your speech will appear here..."></textarea>
+    <h2>Saved Notes</h2>
+    <ul id="notesList"></ul>
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const transcript = document.getElementById('transcript');
+        const saveBtn = document.getElementById('saveBtn');
+        const notesList = document.getElementById('notesList');
+
+        let isListening = false;
+        let finalTranscript = '';
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcriptPart = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcriptPart + ' ';
+                } else {
+                    interimTranscript += transcriptPart;
+                }
+            }
+            transcript.value = finalTranscript + interimTranscript;
+        }; 
+
+        recognition.onend = () => {
+            if (isListening) recognition.start(); 
+            updateButtons();
+        };
+
+        function updateButtons() {
+            startBtn.disabled = isListening;
+            stopBtn.disabled = !isListening;
+        }
+
+        startBtn.onclick = () => {
+            isListening = true;
+            recognition.start();
+            updateButtons();
+        };
+
+        stopBtn.onclick = () => {
+            isListening = false;
+            recognition.stop();
+            updateButtons();
+        };
+        saveBtn.onclick = () => {
+        if (finalTranscript.trim()) {
+            const li = document.createElement('li');
+            li.textContent = finalTranscript.trim();
+            notesList.appendChild(li);
+            finalTranscript = '';  
+            transcript.value = '';
+        }
+};
+
+
+    </script>
+</body>
+</html>
